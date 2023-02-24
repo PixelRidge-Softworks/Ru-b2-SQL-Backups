@@ -20,8 +20,6 @@ When you run the program for the first time, it will prompt you for configuratio
 - Backup directory (optional, defaults to the current directory)
 - Backblaze B2 credentials (optional, enables cloud storage backups)
 
-(make sure you also run `b2 authorize-account` to authorize the B2 CLI Tool)
-
 
 ## Usage
 
