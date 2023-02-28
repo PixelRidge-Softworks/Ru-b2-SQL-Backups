@@ -2,6 +2,10 @@
 
 This Ruby program is designed to perform regular backups of a MySQL database to a local directory, and optionally to a Backblaze B2 cloud storage bucket.
 
+## Known Issue
+
+Currently the program is not uploading to B2, I'm trying to figure out why, but it's not presenting an error, even with debug code. Please bare with me.
+
 
 ## Installation
 
