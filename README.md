@@ -1,4 +1,4 @@
-# B2 Ru(by)sql Backups
+# Ru(b2)sql Backups
 
 This Ruby program is designed to perform regular backups of a MySQL database to a local directory, and optionally to a Backblaze B2 cloud storage bucket.
 
