@@ -50,17 +50,18 @@ class MysqlDatabaseBackup
   def upload_to_b2(backup_file)
     b2_file_name = File.basename(backup_file)
     b2_file_url = "b2://#{@b2_bucket_name}/#{b2_file_name}"
-
     # Check if a backup file with the same name already exists in the B2 bucket
-    existing_file = `b2 list-file-names #{@b2_bucket_name} #{b2_file_name}`
-    if existing_file.include?(b2_file_name)
-      # Delete the existing backup file from the B2 bucket
-      `b2 delete-file-version #{b2_file_url}`
-      puts "Deleted existing backup file from B2 bucket: #{b2_file_url}"
-    end
 
-    # Upload the backup file to the B2 bucket
-    `b2 upload-file #{@b2_bucket_name} #{backup_file} #{b2_file_name}`
+    existing_file = b2-cli list-file-names #{@b2_bucket_name} --prefix #{b2_file_name}
+    if existing_file.include?(b2_file_name)
+    # Delete the existing backup file from the B2 bucket
+    file_version = existing_file.match(/"fileId": "([^"]+)"/)[1]
+    b2-cli delete-file-version #{@b2_bucket_name} #{b2_file_name} #{file_version}
+    puts "Deleted existing backup file from B2 bucket: #{b2_file_url}"
+    end
+    Upload the backup file to the B2 bucket
+
+    b2-cli upload-file #{@b2_bucket_name} #{backup_file} #{b2_file_name}
     puts "Uploaded backup file to B2 bucket: #{b2_file_url}"
-  end
+    end
 end
