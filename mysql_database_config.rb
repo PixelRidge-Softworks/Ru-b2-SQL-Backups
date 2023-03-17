@@ -20,10 +20,13 @@ class MysqlDatabaseConfig
       backup_dir = prompt('Backup Directory', default: '.')
 
       b2_enabled = prompt_bool('Enable Backblaze B2?', default: false)
+      config['b2_enabled'] = b2_enabled
       if b2_enabled
-        @b2_key_id = prompt('Backblaze B2 Key ID')
-        @b2_application_key = prompt('Backblaze B2 Application Key')
-        @b2_bucket_name = prompt('Backblaze B2 Bucket Name')
+        config['b2'] = {
+          'key_id' => @b2_key_id,
+          'application_key' => @b2_application_key,
+          'bucket_name' => @b2_bucket_name
+        }
       end
 
       config = {
