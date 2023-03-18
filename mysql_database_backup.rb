@@ -57,7 +57,7 @@ class MysqlDatabaseBackup
 
     existing_files = `b2 ls #{@b2_bucket_name}`
     existing_files.each_line do |line|
-      file_name = line.split(" ").last.strip
+      file_name = line.split(' ').last.strip
       next unless file_name != b2_file_name
 
       file_id = line.match(/"fileId": "([^"]+)"/)[1]
