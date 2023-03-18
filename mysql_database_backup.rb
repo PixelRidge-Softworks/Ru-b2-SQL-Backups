@@ -24,7 +24,7 @@ class MysqlDatabaseBackup
     puts "backup_file = #{backup_file}"
     puts "MySQL Info = #{@host} #{@username} #{@password} #{backup_file}"
 
-    `mysqldump --host=#{@host} --user=#{@username} --password=#{@password} --all-databases > #{backup_file}`
+    `mysqldump --host=#{@host} --user=#{@username} --password='#{@password}' --all-databases > #{backup_file}`
 
     delete_old_backups
 
