@@ -11,9 +11,9 @@ class MysqlDatabaseBackup
     @password = config['mysql']['password']
     @backup_dir = config['backup_dir'] || '.'
     @b2_enabled = config['b2_enabled'] || false
-    @b2_key_id = config['b2']['key_id']
-    @b2_application_key = config['b2']['application_key']
-    @b2_bucket_name = config['b2']['bucket_name']
+    @b2_key_id = config['b2']&.dig('key_id')
+    @b2_application_key = config['b2']&.dig('application_key')
+    @b2_bucket_name = config['b2']&.dig('bucket_name')
   end
 
   def backup
