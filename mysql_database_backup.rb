@@ -57,11 +57,12 @@ class MysqlDatabaseBackup
 
     existing_files = `b2 ls #{@b2_bucket_name}`
     existing_files.each_line do |line|
-      next unless line.include?(b2_file_name)
+      file_name = line.split(" ").last.strip
+      next unless file_name != b2_file_name
 
       file_id = line.match(/"fileId": "([^"]+)"/)[1]
-      `b2 delete-file-version #{@b2_bucket_name} #{b2_file_name} #{file_id}`
-      puts "Deleted existing backup file from B2 bucket: #{b2_file_url}"
+      `b2 delete-file-version #{@b2_bucket_name} #{file_name} #{file_id}`
+      puts "Deleted existing backup file from B2 bucket: #{file_name}"
     end
     # Upload the backup file to the B2 bucket
 
