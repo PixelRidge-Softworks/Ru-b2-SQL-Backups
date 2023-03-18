@@ -17,8 +17,12 @@ class MysqlDatabaseBackup
   end
 
   def backup
+    puts 'Backing up sql'
     timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
+    puts "Timestamp = #{timestamp}"
     backup_file = File.join(@backup_dir, "database-backup_#{timestamp}.sql")
+    puts "backup_file = #{backup_file}"
+    puts "MySQL Info = #{@host} #{@username} #{@password} #{backup_file}"
 
     `mysqldump --host=#{@host} --user=#{@username} --password=#{@password} --all-databases > #{backup_file}`
 
