@@ -19,17 +19,7 @@ class MysqlDatabaseConfig
 
       backup_dir = prompt('Backup Directory', default: '.')
 
-      b2_enabled = prompt_bool('Enable Backblaze B2?', default: false)
-      config['b2_enabled'] = b2_enabled
-      if b2_enabled
-        config['b2'] = {
-          'key_id' => @b2_key_id,
-          'application_key' => @b2_application_key,
-          'bucket_name' => @b2_bucket_name
-        }
-      end
-
-      config = {
+      @config = {
         'mysql' => {
           'host' => mysql_host,
           'username' => mysql_username,
@@ -38,15 +28,20 @@ class MysqlDatabaseConfig
         'backup_dir' => backup_dir
       }
 
+      b2_enabled = prompt_bool('Enable Backblaze B2?', default: false)
+      @config['b2_enabled'] = b2_enabled
       if b2_enabled
-        config['b2'] = {
+        @b2_key_id = prompt('B2 Key ID')
+        @b2_application_key = prompt('B2 Application Key')
+        @b2_bucket_name = prompt('B2 Bucket Name')
+        @config['b2'] = {
           'key_id' => @b2_key_id,
           'application_key' => @b2_application_key,
           'bucket_name' => @b2_bucket_name
         }
       end
 
-      File.write(@config_file, JSON.pretty_generate(config))
+      File.write(@config_file, JSON.pretty_generate(@config))
       puts "Config file generated: #{@config_file}"
     end
   end
