@@ -55,10 +55,11 @@ class MysqlDatabaseBackup
     b2_file_url = "b2://#{@b2_bucket_name}/#{b2_file_name}"
     # Check if a backup file with the same name already exists in the B2 bucket
 
-    existing_file = `b2 list-file-names #{@b2_bucket_name} --prefix #{b2_file_name}`
-    if existing_file.include?(b2_file_name)
-      # Delete the existing backup file from the B2 bucket
-      file_id = existing_file.match(/"fileId": "([^"]+)"/)[1]
+    existing_files = `b2 ls #{@b2_bucket_name}`
+    existing_files.each_line do |line|
+      next unless line.include?(b2_file_name)
+
+      file_id = line.match(/"fileId": "([^"]+)"/)[1]
       `b2 delete-file-version #{@b2_bucket_name} #{b2_file_name} #{file_id}`
       puts "Deleted existing backup file from B2 bucket: #{b2_file_url}"
     end
