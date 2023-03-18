@@ -56,17 +56,20 @@ class MysqlDatabaseBackup
     # Check if a backup file with the same name already exists in the B2 bucket
 
     existing_files = `b2 ls #{@b2_bucket_name}`
-    existing_files.each_line do |line|
-      file_name = line.split(' ').last.strip
-      next unless file_name != b2_file_name
+    unless existing_files.empty?
+      existing_files.each_line do |line|
+        file_name = line.split(' ').last.strip
+        next unless file_name != b2_file_name
 
-      file_id = line.match(/"fileId": "([^"]+)"/)[1]
-      `b2 delete-file-version #{@b2_bucket_name} #{file_name} #{file_id}`
-      puts "Deleted existing backup file from B2 bucket: #{file_name}"
+        file_id = line.match(/"fileId": "([^"]+)"/)[1]
+        `b2 delete-file-version #{@b2_bucket_name} #{file_name} #{file_id}`
+        puts "Deleted existing backup file from B2 bucket: #{file_name}"
+      end
     end
-    # Upload the backup file to the B2 bucket
 
+    # Upload the backup file to the B2 bucket
     `b2 upload-file #{@b2_bucket_name} #{backup_file} #{b2_file_name}`
     puts "Uploaded backup file to B2 bucket: #{b2_file_url}"
   end
+
 end
