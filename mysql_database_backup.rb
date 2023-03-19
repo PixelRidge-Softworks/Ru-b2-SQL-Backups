@@ -33,7 +33,8 @@ class MysqlDatabaseBackup
       @logger.info("Backup file path: #{backup_file}")
       @logger.info("MySQL Info: #{@host} #{@username} #{@password} #{backup_file}")
 
-      `mysqldump --host=#{@host} --user=#{@username} --password='#{@password}' --databases #{database_name} > #{backup_file}`
+      `mysqldump --host=#{@host} --user=#{@username} --password='#{@password}'
+      --databases #{database_name} > #{backup_file}`
 
       delete_old_backups
 
