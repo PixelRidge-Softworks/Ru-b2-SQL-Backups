@@ -1,52 +1,60 @@
 # frozen_string_literal: true
 
-# class for generating the mysql config if it doesn't exist
 require 'json'
+require_relative 'loggman'
 
-# class for generating our config
+# class for handling the config
 class MysqlDatabaseConfig
-  def initialize(config_file)
+  def initialize(config_file, logger)
     @config_file = config_file
+    @logger = logger
   end
 
-  def generate
+  def generate # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    @logger.info("Generating MySQL database configuration file: #{@config_file}.")
+
     if File.exist?(@config_file)
-      puts 'Config file already exists, skipping generation.'
+      @logger.info('Config file already exists, skipping generation.')
     else
-      mysql_host = prompt('MySQL Host')
-      mysql_username = prompt('MySQL Username')
-      mysql_password = prompt('MySQL Password')
+      begin
+        mysql_host = prompt('MySQL Host')
+        mysql_username = prompt('MySQL Username')
+        mysql_password = prompt('MySQL Password')
 
-      backup_dir = prompt('Backup Directory', default: '.')
+        backup_dir = prompt('Backup Directory', default: '.')
 
-      local_retention_days = prompt('Local backup retention in days (1 day minimum)', default: '1').to_i
+        local_retention_days = prompt('Local backup retention in days (1 day minimum)', default: '1').to_i
 
-      @config = {
-        'mysql' => {
-          'host' => mysql_host,
-          'username' => mysql_username,
-          'password' => mysql_password
-        },
-        'backup_dir' => backup_dir,
-        'local_retention_days' => local_retention_days
-      }
-      b2_enabled = prompt_bool('Enable Backblaze B2?', default: false)
-      @config['b2_enabled'] = b2_enabled
-      if b2_enabled
-        @b2_key_id = prompt('B2 Key ID')
-        @b2_application_key = prompt('B2 Application Key')
-        @b2_bucket_name = prompt('B2 Bucket Name')
-        b2_retention_days = prompt('B2 backup retention in days (1 day minimum)', default: '1').to_i
-        @config['b2'] = {
-          'key_id' => @b2_key_id,
-          'application_key' => @b2_application_key,
-          'bucket_name' => @b2_bucket_name,
-          'retention_days' => b2_retention_days
+        @config = {
+          'mysql' => {
+            'host' => mysql_host,
+            'username' => mysql_username,
+            'password' => mysql_password
+          },
+          'backup_dir' => backup_dir,
+          'local_retention_days' => local_retention_days
         }
-      end
+        b2_enabled = prompt_bool('Enable Backblaze B2?', default: false)
+        @config['b2_enabled'] = b2_enabled
+        if b2_enabled
+          @b2_key_id = prompt('B2 Key ID')
+          @b2_application_key = prompt('B2 Application Key')
+          @b2_bucket_name = prompt('B2 Bucket Name')
+          b2_retention_days = prompt('B2 backup retention in days (1 day minimum)', default: '1').to_i
+          @config['b2'] = {
+            'key_id' => @b2_key_id,
+            'application_key' => @b2_application_key,
+            'bucket_name' => @b2_bucket_name,
+            'retention_days' => b2_retention_days
+          }
+        end
 
-      File.write(@config_file, JSON.pretty_generate(@config))
-      puts "Config file generated: #{@config_file}"
+        File.write(@config_file, JSON.pretty_generate(@config))
+        @logger.info("Config file generated: #{@config_file}")
+      rescue StandardError => e
+        @logger.error("An error occurred while generating MySQL database configuration file: #{e.message}")
+        @logger.debug("Backtrace: #{e.backtrace}")
+      end
     end
   end
 
@@ -63,4 +71,18 @@ class MysqlDatabaseConfig
   def prompt_bool(message, default: false)
     prompt("#{message} (y/n)", default: default) =~ /y|yes/i
   end
+end
+
+config_file = 'config.json'
+logger = Loggman.new
+
+begin
+  logger.info('Starting script.')
+  config_generator = MysqlDatabaseConfig.new(config_file, logger)
+  config_generator.generate
+  logger.info('MySQL database configuration file generation completed successfully.')
+  logger.info('Script completed successfully.')
+rescue StandardError => e
+  logger.error("An error occurred: #{e.message}")
+  logger.debug("Backtrace: #{e.backtrace}")
 end

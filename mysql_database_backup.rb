@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 require 'json'
+require_relative 'loggman'
 
 # class for creating, managing and deleting backups both locally and in B2
 class MysqlDatabaseBackup
-  def initialize(config_file)
+  def initialize(config_file, logger) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
     config = JSON.parse(File.read(config_file))
     @host = config['mysql']['host']
     @username = config['mysql']['username']
@@ -16,19 +17,21 @@ class MysqlDatabaseBackup
     @b2_bucket_name = config['b2']&.dig('bucket_name')
     @local_retention_days = config['local_retention_days'] || 30
     @b2_retention_days = config['b2']&.dig('retention_days') || 30
+    @logger = logger
   end
 
-  def backup
-    puts 'Backing up sql'
-    timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
-    puts "Timestamp = #{timestamp}"
+  def backup # rubocop:disable Metrics/MethodLength
+    @logger.info('Backing up MySQL database.')
 
-    databases = get_databases
+    timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
+    @logger.info("Timestamp for backup: #{timestamp}")
+
+    databases = find_databases
 
     databases.each do |database_name|
       backup_file = File.join(@backup_dir, "#{database_name}_#{timestamp}.sql")
-      puts "backup_file = #{backup_file}"
-      puts "MySQL Info = #{@host} #{@username} #{@password} #{backup_file}"
+      @logger.info("Backup file path: #{backup_file}")
+      @logger.info("MySQL Info: #{@host} #{@username} #{@password} #{backup_file}")
 
       `mysqldump --host=#{@host} --user=#{@username} --password='#{@password}' --databases #{database_name} > #{backup_file}`
 
@@ -38,13 +41,15 @@ class MysqlDatabaseBackup
     end
   end
 
-  def get_databases
+  def find_databases
     databases_output = `mysql --host=#{@host} --user=#{@username} --password='#{@password}' --execute='SHOW DATABASES;'`
     databases = databases_output.split("\n")[1..] # Ignore the first line (header)
     databases.reject { |db| %w[information_schema performance_schema mysql sys].include?(db) }
   end
 
-  def delete_old_backups
+  def delete_old_backups # rubocop:disable Metrics/MethodLength
+    @logger.info('Deleting old backups.')
+
     max_age_days = @local_retention_days
     max_age_seconds = max_age_days * 24 * 60 * 60
     backups = Dir[File.join(@backup_dir, '*_*.sql')]
@@ -55,19 +60,19 @@ class MysqlDatabaseBackup
       age_seconds = Time.now - File.mtime(backup)
 
       if age_seconds > max_age_seconds
-        puts "Deleted old backup: #{backup}"
+        @logger.info("Deleted old backup: #{backup}")
         File.delete(backup)
       end
     end
   end
 
-  def upload_to_b2(backup_file)
+  def upload_to_b2(backup_file) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     b2_file_name = File.basename(backup_file)
     b2_file_url = "b2://#{@b2_bucket_name}/#{b2_file_name}"
 
     # Upload the backup file to the B2 bucket
     `b2 upload-file #{@b2_bucket_name} #{backup_file} #{b2_file_name}`
-    puts "Uploaded backup file to B2 bucket: #{b2_file_url}"
+    @logger.info("Uploaded backup file to B2 bucket: #{b2_file_url}")
 
     # Calculate the cutoff date based on b2_retention_days
     max_age_days = @b2_retention_days
@@ -90,7 +95,7 @@ class MysqlDatabaseBackup
 
       file_id = line.match(/"fileId": "([^"]+)"/)[1]
       `b2 delete-file-version #{@b2_bucket_name} #{file_name} #{file_id}`
-      puts "Deleted old backup file from B2 bucket: #{file_name}"
+      @logger.info("Deleted old backup file from B2 bucket: #{file_name}")
     end
   end
 end

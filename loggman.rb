@@ -5,8 +5,13 @@ require 'fileutils'
 
 # Loggman class
 class Loggman
-  def initialize(logfile)
-    @logfile = logfile
+  LOG_PREFIX = 'log'
+  LOG_DURATION = 7 * 24 * 60 * 60 # 1 week
+  MAX_LOG_AGE = 60 * 24 * 60 * 60 # 2 months
+
+  def initialize(log_dir = nil)
+    @log_dir = log_dir || default_log_dir
+    @logfile = generate_logfile
   end
 
   def log(message, level = :info)
@@ -33,12 +38,29 @@ class Loggman
     log(message, :debug)
   end
 
-  def delete_old_logs
-    max_age_days = 7
-    max_age_seconds = max_age_days * 24 * 60 * 60
+  private
 
-    if File.exist?(@logfile) && Time.now - File.mtime(@logfile) > max_age_seconds
-      FileUtils.rm(@logfile)
+  def default_log_dir
+    backup_dir = MysqlDatabaseConfig.new(nil).backup_dir
+    File.join(backup_dir, 'logs')
+  end
+
+  def generate_logfile
+    start_time = Time.now
+    log_start_day = start_time.strftime('%Y-%m-%d')
+    end_time = start_time + LOG_DURATION
+    log_end_day = end_time.strftime('%Y-%m-%d')
+    log_filename = "#{LOG_PREFIX}-#{log_start_day}-#{log_end_day}.log"
+    log_path = File.join(@log_dir, log_filename)
+    FileUtils.mkdir_p(@log_dir)
+    log_path
+  end
+
+  def delete_old_logs
+    Dir.glob(File.join(@log_dir, "#{LOG_PREFIX}-*.log")).each do |logfile|
+      if Time.now - File.mtime(logfile) > MAX_LOG_AGE
+        FileUtils.rm(logfile)
+      end
     end
   end
 end
