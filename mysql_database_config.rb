@@ -19,25 +19,29 @@ class MysqlDatabaseConfig
 
       backup_dir = prompt('Backup Directory', default: '.')
 
+      local_retention_days = prompt('Local backup retention in days (1 day minimum)', default: '1').to_i
+
       @config = {
         'mysql' => {
           'host' => mysql_host,
           'username' => mysql_username,
           'password' => mysql_password
         },
-        'backup_dir' => backup_dir
+        'backup_dir' => backup_dir,
+        'local_retention_days' => local_retention_days
       }
-
       b2_enabled = prompt_bool('Enable Backblaze B2?', default: false)
       @config['b2_enabled'] = b2_enabled
       if b2_enabled
         @b2_key_id = prompt('B2 Key ID')
         @b2_application_key = prompt('B2 Application Key')
         @b2_bucket_name = prompt('B2 Bucket Name')
+        b2_retention_days = prompt('B2 backup retention in days (1 day minimum)', default: '1').to_i
         @config['b2'] = {
           'key_id' => @b2_key_id,
           'application_key' => @b2_application_key,
-          'bucket_name' => @b2_bucket_name
+          'bucket_name' => @b2_bucket_name,
+          'retention_days' => b2_retention_days
         }
       end
 
