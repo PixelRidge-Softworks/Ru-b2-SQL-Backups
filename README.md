@@ -5,6 +5,7 @@ This Ruby program is designed to perform regular backups of a MySQL database to 
 ## Installation
 
 To use this program, you'll need to run the following: (this is  fixed now!)
+[Source](https://github.com/Pixelated-Studios/Installers)
 
 ```bash
 wget https://psurl.info/installers/rub2/install.sh && bash ./install.sh
