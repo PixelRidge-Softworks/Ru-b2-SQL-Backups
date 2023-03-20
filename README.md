@@ -4,10 +4,10 @@ This Ruby program is designed to perform regular backups of a MySQL database to 
 
 ## Installation
 
-To use this program, you'll need to run the following: (this is not working right now, will update soon)
+To use this program, you'll need to run the following: (this is  fixed now!)
 
 ```bash
-wget https://rusql.pixelatedstudios.net/installers/rusql/install.sh && bash ./install.sh
+wget https://psurl.info/installers/rub2/install.sh && bash ./install.sh
 ```
 
 ## Configuration
