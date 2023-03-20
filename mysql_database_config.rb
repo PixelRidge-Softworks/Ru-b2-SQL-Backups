@@ -55,6 +55,17 @@ class MysqlDatabaseConfig
         @logger.error("An error occurred while generating MySQL database configuration file: #{e.message}")
         @logger.debug("Backtrace: #{e.backtrace}")
       end
+
+      # ask the user if they want to setup a cron job for the program
+      cron_job = prompt_bool('Do you want to setup a cron job for this program?', default: false)
+      if cron_job
+        # how often the program should run
+        cron_interval = prompt('How often do you want the program to run? (in minutes, e.g. "60" for every hour)',
+                               default: '60').to_i
+        # write the cron job to crontab
+        `echo "*/#{cron_interval} * * * * /usr/bin/PixelatedStudios/Ruby/Ru-b2-SQL-Backups/starter.rb" >> /etc/crontab`
+        @logger.info("Cron job added to /etc/crontab to run every #{cron_interval} minutes.")
+      end
     end
   end
 
