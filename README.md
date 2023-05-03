@@ -2,13 +2,16 @@
 
 This Ruby program is designed to perform regular backups of a MySQL database to a local directory, and optionally to a Backblaze B2 cloud storage bucket.
 
+Please put any feature suggestions into [Issues](https://github.com/Pixelated-Studios/Ru-b2-SQL-Backups/issues) and we will implement them if we can!
+If you'd like to help with the development of Ru(b2)SQL Backups, you can clone this repository and then create a Pull Request. If we don't find any issues, we will merge the PR.
+
 ## Installation
 
 To use this program, you'll need to run the following: (this is  fixed now!)
-[Source](https://github.com/Pixelated-Studios/Installers)
+[Source](https://raw.githubusercontent.com/Pixelated-Studios/Installers/main/install.sh)
 
 ```bash
-wget https://psurl.info/installers/rub2/install.sh && bash ./install.sh
+wget https://raw.githubusercontent.com/Pixelated-Studios/Installers/main/install.sh && bash ./install.sh
 ```
 
 ## Configuration
@@ -26,7 +29,6 @@ To run the program, simply execute the `starter.rb` file using the following com
 ```bash
 ruby starter.rb
 ```
-It can also be Daemonized with SystemD
 
 You can also run this program via Cron. For example, this Crontab would run the program every 6 hours:
 
@@ -47,7 +49,9 @@ To delete old backups, the program will check for backups that are older than `l
 
 ## Compatibility
 
-This program is compatible with Debian and RHEL based systems, but could be made to work with any systems compatible with Ruby, Python3, and Bash.
+This program is compatible with Debian and RHEL based systems, but could be made to work with any systems compatible with Ruby, Python3, and Bash. 
+
+This program was also built on Arch Linux, so it should also run fine on Majaro, Arch, and any other Arch based distro.
 
 ## Backblaze B2
 
