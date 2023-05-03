@@ -53,7 +53,7 @@ If you need to change the configuration settings, simply delete the `config.json
 
 This program is compatible with Debian and RHEL based systems, but could be made to work with any systems compatible with Ruby, Python3, and Bash. 
 
-This program was also built on Arch Linux, so it should also run fine on Majaro, Arch, and any other Arch based distro.
+This program was also built on Arch Linux, so it should also run fine on Manjaro, Arch, and any other Arch based distro.
 
 ## Backblaze B2
 
