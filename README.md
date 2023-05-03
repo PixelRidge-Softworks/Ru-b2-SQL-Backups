@@ -26,6 +26,7 @@ To run the program, simply execute the `starter.rb` file using the following com
 ```bash
 ruby starter.rb
 ```
+It can also be Daemonized with SystemD
 
 You can also run this program via Cron. For example, this Crontab would run the program every 6 hours:
 
