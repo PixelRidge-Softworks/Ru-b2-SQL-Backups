@@ -58,9 +58,7 @@ class Loggman
 
   def delete_old_logs
     Dir.glob(File.join(@log_dir, "#{LOG_PREFIX}-*.log")).each do |logfile|
-      if Time.now - File.mtime(logfile) > MAX_LOG_AGE
-        FileUtils.rm(logfile)
-      end
+      FileUtils.rm(logfile) if Time.now - File.mtime(logfile) > MAX_LOG_AGE
     end
   end
 end
