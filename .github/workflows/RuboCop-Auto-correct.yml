@@ -38,5 +38,5 @@ jobs:
         title: "Apply RuboCop auto-correct"
         branch: "rubocop-autocorrect-${{ github.run_number }}"
         base: "development"
-        delete-branch: false
+        delete-branch: true
         body: "This PR applies RuboCop auto-corrections to the codebase."
