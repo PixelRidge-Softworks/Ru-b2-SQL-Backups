@@ -72,7 +72,7 @@ class MysqlDatabaseConfig
   private
 
   def prompt(message, default: nil)
-    print message.to_s
+    print message
     print " [#{default}]" if default
     print ': '
     value = gets.chomp
