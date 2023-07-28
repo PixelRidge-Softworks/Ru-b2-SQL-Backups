@@ -3,6 +3,8 @@ name: Ruby
 on:
   push:
     branches: [ "main" ]
+  pull_request_target:
+    branches: [ "main" ]
 
 permissions:
   contents: write
