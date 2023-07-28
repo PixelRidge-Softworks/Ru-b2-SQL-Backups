@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        token: ${{ secrets.RUBOCOP_CHECKS }}
+        token: ${{ secrets.GITHUB_TOKEN }}
     - name: Set up Ruby
       uses: ruby/setup-ruby@ee2113536afb7f793eed4ce60e8d3b26db912da4 # v1.127.0
       with:
@@ -34,7 +34,7 @@ jobs:
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
       with:
-        token: ${{ secrets.RUBOCOP_CHECKS }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         title: "Apply RuboCop auto-correct"
         branch: "rubocop-autocorrect-${{ github.run_number }}"
         delete-branch: true
