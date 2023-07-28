@@ -3,8 +3,6 @@ name: Ruby
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -28,3 +26,16 @@ jobs:
       run: gem install rubocop
     - name: Run tests
       run: rubocop -A --fail-level warn
+    - name: Commit changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git commit -m "Apply RuboCop auto-correct" || echo "No changes to commit"
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v3
+      with:
+        title: "Apply RuboCop auto-correct"
+        branch: "rubocop-autocorrect"
+        delete-branch: true
+        body: "This PR applies RuboCop auto-corrections to the codebase."
