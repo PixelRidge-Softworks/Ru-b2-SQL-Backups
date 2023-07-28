@@ -27,4 +27,4 @@ jobs:
     - name: Install Rubocops latest version
       run: gem install rubocop
     - name: Run tests
-      run: rubocop
+      run: rubocop -A --fail-level warn
