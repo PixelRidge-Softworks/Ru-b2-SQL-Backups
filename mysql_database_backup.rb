@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'sequel'
+require 'securerandom'
 require_relative 'loggman'
 
 # class for creating, managing and deleting backups both locally and in B2
@@ -18,6 +20,21 @@ class MysqlDatabaseBackup
     @local_retention_days = config['local_retention_days'] || 30
     @b2_retention_days = config['b2']&.dig('retention_days') || 30
     @logger = logger
+
+    # Create a SQLite database
+    @db = Sequel.sqlite('backups.db')
+
+    # Create a table for storing backup information
+    @db.create_table?(:backups) do
+      primary_key :id
+      String :backup_id
+      String :backup_name
+      Time :timestamp
+      String :backup_type # New column for the backup type
+    end
+
+    # Get a reference to the table
+    @backups_table = @db[:backups]
   end
 
   def backup # rubocop:disable Metrics/MethodLength
@@ -30,6 +47,11 @@ class MysqlDatabaseBackup
 
     databases.each do |database_name|
       backup_file = File.join(@backup_dir, "#{database_name}_#{timestamp}.sql")
+      backup_id = generate_backup_id
+
+      # Store the backup information in the SQLite database
+      @backups_table.insert(backup_id:, backup_name: backup_file, timestamp: Time.now, backup_type: 'local')
+
       @logger.info("Backup file path: #{backup_file}")
       @logger.info("MySQL Info: #{@host} #{@username} #{@password} #{backup_file}")
 
@@ -38,7 +60,7 @@ class MysqlDatabaseBackup
 
       delete_old_backups
 
-      upload_to_b2(backup_file) if @b2_enabled
+      upload_to_b2(backup_file, backup_id) if @b2_enabled
     end
   end
 
@@ -67,19 +89,26 @@ class MysqlDatabaseBackup
     end
   end
 
-  def upload_to_b2(backup_file) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+  def upload_to_b2(backup_file, backup_id) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     b2_file_name = File.basename(backup_file)
     b2_file_url = "b2://#{@b2_bucket_name}/#{b2_file_name}"
 
     # Upload the backup file to the B2 bucket
-    `b2 upload-file #{@b2_bucket_name} #{backup_file} #{b2_file_name}`
+    `./b2 upload-file #{@b2_bucket_name} #{backup_file} #{b2_file_name}`
     @logger.info("Uploaded backup file to B2 bucket: #{b2_file_url}")
+
+    # Update the backup type in the SQLite database
+    @backups_table.where(backup_id:).update(backup_type: 'remote')
+
+    # Delete the local backup file
+    File.delete(backup_file)
+    @logger.info("Deleted local backup file: #{backup_file}")
 
     # Calculate the cutoff date based on b2_retention_days
     max_age_days = @b2_retention_days
     cutoff_date = Time.now - (max_age_days * 24 * 60 * 60)
 
-    existing_files = `b2 ls #{@b2_bucket_name}`
+    existing_files = `./b2 ls #{@b2_bucket_name}`
 
     return if existing_files.empty?
 
@@ -95,8 +124,14 @@ class MysqlDatabaseBackup
       next unless file_timestamp < cutoff_date
 
       file_id = line.match(/"fileId": "([^"]+)"/)[1]
-      `b2 delete-file-version #{@b2_bucket_name} #{file_name} #{file_id}`
+      `./b2 delete-file-version #{@b2_bucket_name} #{file_name} #{file_id}`
       @logger.info("Deleted old backup file from B2 bucket: #{file_name}")
     end
+  end
+
+  private
+
+  def generate_backup_id
+    SecureRandom.alphanumeric(4)
   end
 end
