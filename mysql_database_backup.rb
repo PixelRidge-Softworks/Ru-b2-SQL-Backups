@@ -21,6 +21,13 @@ class MysqlDatabaseBackup
     @b2_retention_days = config['b2']&.dig('retention_days') || 30
     @logger = logger
 
+    # Authenticate with B2
+    output = `b2 authorize-account #{@b2_key_id} #{@b2_application_key}`
+    unless $CHILD_STATUS.success?
+      @logger.error("Failed to authenticate with B2: #{output}")
+      exit 1
+    end
+
     # Create a SQLite database
     @db = Sequel.sqlite('backups.db')
 

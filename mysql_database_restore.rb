@@ -6,6 +6,12 @@ require 'tty-progressbar'
 require 'sequel'
 require 'open3'
 
+config = JSON.parse(File.read('config.json'))
+host = config['mysql']['host']
+username = config['mysql']['username']
+password = config['mysql']['password']
+b2_bucket_name = config['b2']&.dig('bucket_name')
+
 prompt = TTY::Prompt.new
 
 # Connect to the SQLite database
@@ -36,21 +42,27 @@ user_choice = prompt.select('Choose a backup to restore:', choices)
 backup_type = backups_table.where(backup_name: user_choice).get(:backup_type)
 
 if backup_type == 'remote'
-  # Get the B2 bucket name
-  b2_bucket_name = backups_table.where(backup_name: user_choice).get(:b2_bucket_name)
-
   # Download the remote backup from B2
   `./b2 download-file-by-name #{b2_bucket_name} #{user_choice} ./#{user_choice}`
 end
 
 # Perform a "dry run" of the SQL script
-output = `mysql --host=#{mysql_host} --user=#{mysql_username} --password=#{mysql_password} your_database
+output = `mysql --host=#{host} --user=#{username} --password=#{password} #{user_choice}
           --execute="START TRANSACTION; SOURCE #{user_choice}; ROLLBACK;"`
 if $CHILD_STATUS.success?
   prompt.say('SQL file passed the dry run.')
 else
   prompt.say("Error in SQL file: #{output}")
   exit 1
+end
+
+# Ask the user for confirmation before dropping the database
+if prompt.yes?("Are you sure you want to drop the database and restore it from the backup #{user_choice}?")
+  `mysql --host=#{host} --user=#{username} --password=#{password} --execute="DROP DATABASE IF EXISTS #{user_choice};
+   CREATE DATABASE #{user_choice};"`
+else
+  prompt.say('Database restoration cancelled.')
+  exit 0
 end
 
 # Create a progress bar
@@ -66,16 +78,14 @@ File.open(user_choice) do |file|
     next unless line.strip.end_with?(';') && sql_chunk.bytesize >= 1024
 
     # Write the chunk to the MySQL process
-    `mysql --host=#{mysql_host} --user=#{mysql_username} --password=#{mysql_password} your_database
-    --execute="#{sql_chunk}"`
+    `mysql --host=#{host} --user=#{username} --password=#{password} #{user_choice} --execute="#{sql_chunk}"`
     # Update the progress bar
     bar.advance(sql_chunk.bytesize)
     sql_chunk = ''
   end
   # Write the remaining SQL commands to the MySQL process
   unless sql_chunk.empty?
-    `mysql --host=#{mysql_host} --user=#{mysql_username} --password=#{mysql_password} your_database
-    --execute="#{sql_chunk}"`
+    `mysql --host=#{host} --user=#{username} --password=#{password} #{user_choice} --execute="#{sql_chunk}"`
     bar.advance(sql_chunk.bytesize)
   end
 end
