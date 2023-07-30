@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # frozen_string_literal: true
 
 require_relative 'mysql_database_config'
@@ -8,11 +10,10 @@ config_file = 'config.json'
 logger = Loggman.new
 
 begin
-  if ARGV[0] == '--restore' && ARGV[1]
-    backup_id = ARGV[1]
+  if ARGV[0] == '--restore'
     # Call your restore function here with backup_id
     logger.info("Restoring backup with ID: #{backup_id}")
-    # restore_backup(backup_id) # Uncomment this line when you have implemented the restore_backup function
+    
   else
     logger.info('Starting script.')
 

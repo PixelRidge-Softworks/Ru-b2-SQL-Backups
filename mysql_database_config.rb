@@ -63,7 +63,7 @@ class MysqlDatabaseConfig
         cron_interval = prompt('How often do you want the program to run? (in minutes, e.g. "60" for every hour)',
                                default: '60').to_i
         # write the cron job to crontab
-        `echo "*/#{cron_interval} * * * * /usr/bin/PixelRidge-Softworks/Ruby/Ru-b2-SQL-Backups/starter.rb" >>
+        `echo "*/#{cron_interval} * * * * /usr/bin/PixelRidge-Softworks/Ruby/Ru-b2-SQL-Backups/rub2" >>
         /etc/crontab`
         @logger.info("Cron job added to /etc/crontab to run every #{cron_interval} minutes.")
       end
